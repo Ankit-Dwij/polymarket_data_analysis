@@ -62,6 +62,8 @@ class Scheduler:
 
 
 scheduler = Scheduler(REFRESH_SECONDS)
+# Start the scheduler as soon as the module is imported so it also runs
+scheduler.start()
 app = Flask(__name__)
 
 
