@@ -30,7 +30,7 @@ GitHub account for repo access (if forking).
 
 Setup
 1. Clone the Repo
-bashgit clone https://github.com/terrytrl100/prediction_markets_test.git
+bashgit clone [https://github.com/Ankit-Dwij/polymarket_data_analysis.git](https://github.com/Ankit-Dwij/polymarket_data_analysis.git)
 cd prediction_markets_test
 
 3. Create Virtual Environment
