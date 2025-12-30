@@ -5,6 +5,7 @@ import threading
 import time
 from datetime import datetime, timezone
 
+import pandas as pd
 from flask import Flask, jsonify, send_file
 
 
@@ -89,6 +90,36 @@ def serve_volatility_csv():
     )
 
 
+@app.route("/volatility.json")
+def serve_volatility_json():
+    if not os.path.exists(VOLATILITY_CSV_PATH):
+        return (
+            jsonify(
+                {
+                    "error": "volatility_markets.csv not found yet",
+                    "csv_path": VOLATILITY_CSV_PATH,
+                    "last_success": format_dt(scheduler.last_run_succeeded),
+                }
+            ),
+            404,
+        )
+
+    try:
+        df = pd.read_csv(VOLATILITY_CSV_PATH)
+        records = df.to_dict(orient="records")
+        return jsonify(records)
+    except Exception as exc:
+        return (
+            jsonify(
+                {
+                    "error": "failed to read volatility_markets.csv",
+                    "details": str(exc),
+                }
+            ),
+            500,
+        )
+
+
 @app.route("/all_markets")
 def serve_all_markets_csv():
     if not os.path.exists(ALL_MARKETS_CSV_PATH):
@@ -111,6 +142,36 @@ def serve_all_markets_csv():
     )
 
 
+@app.route("/all_markets.json")
+def serve_all_markets_json():
+    if not os.path.exists(ALL_MARKETS_CSV_PATH):
+        return (
+            jsonify(
+                {
+                    "error": "all_markets.csv not found yet",
+                    "csv_path": ALL_MARKETS_CSV_PATH,
+                    "last_success": format_dt(scheduler.last_run_succeeded),
+                }
+            ),
+            404,
+        )
+
+    try:
+        df = pd.read_csv(ALL_MARKETS_CSV_PATH)
+        records = df.to_dict(orient="records")
+        return jsonify(records)
+    except Exception as exc:
+        return (
+            jsonify(
+                {
+                    "error": "failed to read all_markets.csv",
+                    "details": str(exc),
+                }
+            ),
+            500,
+        )
+
+
 @app.route("/full_markets")
 def serve_full_markets_csv():
     if not os.path.exists(FULL_MARKETS_CSV_PATH):
@@ -131,6 +192,36 @@ def serve_full_markets_csv():
         as_attachment=False,
         download_name="full_markets.csv",
     )
+
+
+@app.route("/full_markets.json")
+def serve_full_markets_json():
+    if not os.path.exists(FULL_MARKETS_CSV_PATH):
+        return (
+            jsonify(
+                {
+                    "error": "full_markets.csv not found yet",
+                    "csv_path": FULL_MARKETS_CSV_PATH,
+                    "last_success": format_dt(scheduler.last_run_succeeded),
+                }
+            ),
+            404,
+        )
+
+    try:
+        df = pd.read_csv(FULL_MARKETS_CSV_PATH)
+        records = df.to_dict(orient="records")
+        return jsonify(records)
+    except Exception as exc:
+        return (
+            jsonify(
+                {
+                    "error": "failed to read full_markets.csv",
+                    "details": str(exc),
+                }
+            ),
+            500,
+        )
 
 
 @app.route("/status")
