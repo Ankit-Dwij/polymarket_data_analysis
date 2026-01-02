@@ -135,7 +135,6 @@ def get_all_markets(client):
             cursor = markets['next_cursor']
 
             all_markets.append(markets_df)
-
             if cursor is None:
                 break
         except Exception as e:
@@ -334,17 +333,16 @@ def process_single_row(row, client):
     ret['condition_id'] = row['condition_id']
     
     # Extract volume - try common field names
+    # row might be a pandas Series or dict, so use get() or try-except
     volume = 0
-    if 'volume' in row:
-        volume = row['volume']
-    elif 'volume_24h' in row:
-        volume = row['volume_24h']
-    elif 'volume_usd' in row:
-        volume = row['volume_usd']
-    elif 'volume_24h_usd' in row:
-        volume = row['volume_24h_usd']
-    elif 'volume_24h_usdc' in row:
-        volume = row['volume_24h_usdc']
+    try:
+        if isinstance(row, dict):
+            volume = row.get('volume') or row.get('volume_24h') or row.get('volume_usd') or row.get('volume_24h_usd') or row.get('volume_24h_usdc') or 0
+        else:
+            # pandas Series
+            volume = row.get('volume', 0) or row.get('volume_24h', 0) or row.get('volume_usd', 0) or row.get('volume_24h_usd', 0) or row.get('volume_24h_usdc', 0) or 0
+    except:
+        volume = 0
     ret['volume'] = float(volume) if volume else 0
 
     return ret
@@ -481,15 +479,45 @@ def get_markets(all_results, sel_df, maker_reward=1):
          'tick_size', 'end_date_iso', 'volume', 'market_slug', 'token1', 'token2', 'condition_id']]
     new_df = new_df.replace([np.inf, -np.inf], 0)
     
+    # Save backup before filtering
+    backup_df = new_df.copy()
+    initial_count = len(new_df)
+    print(f"Initial markets count: {initial_count}")
+    
     # Apply filters:
-    # 1. Volume > $1000
+    # 1. Volume > $1000 (only if volume data is actually available)
     if 'volume' in new_df.columns:
-        new_df = new_df[new_df['volume'] > 1000]
+        # Check if we have any non-zero volume values
+        non_zero_volume_count = (new_df['volume'] > 0).sum()
+        max_volume = new_df['volume'].max() if not new_df['volume'].isna().all() else 0
+        print(f"Volume stats: {non_zero_volume_count} markets with volume > 0, max volume: {max_volume}")
+        
+        if non_zero_volume_count > 0:
+            before_volume_filter = len(new_df)
+            new_df = new_df[new_df['volume'] > 1000]
+            print(f"After volume filter (>$1000): {len(new_df)} markets (removed {before_volume_filter - len(new_df)})")
+            if len(new_df) == 0:
+                print("WARNING: Volume filter removed all markets! Skipping volume filter.")
+                # Reset to backup before volume filter
+                new_df = backup_df.copy()
+        else:
+            print("Warning: All volume values are 0. Skipping volume filter.")
     else:
         print("Warning: 'volume' column not found. Skipping volume filter.")
     
     # 2. spread * 100 < max_spread
-    new_df = new_df[(new_df['spread'] * 100) < new_df['max_spread']]
+    before_spread_filter = len(new_df)
+    # Handle cases where max_spread might be 0 or NaN
+    valid_spread_filter = (new_df['spread'] * 100) < new_df['max_spread']
+    valid_spread_filter = valid_spread_filter.fillna(False)  # Treat NaN as False
+    new_df = new_df[valid_spread_filter]
+    print(f"After spread filter (spread*100 < max_spread): {len(new_df)} markets (removed {before_spread_filter - len(new_df)})")
+    
+    if len(new_df) == 0:
+        print("WARNING: All filters removed all markets! Returning unfiltered data.")
+        # Return backup if all filters removed everything
+        new_df = backup_df.copy()
+        print("Returning all markets without filters applied.")
     
     # 3. Sort by min_size in ascending order
     new_df = new_df.sort_values('min_size', ascending=True)
