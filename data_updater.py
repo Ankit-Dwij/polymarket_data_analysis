@@ -464,7 +464,7 @@ def get_markets(all_results, sel_df, maker_reward=1):
     new_df = new_df[
         ['question', 'answer1', 'answer2', 'neg_risk', 'spread', 'best_bid', 'best_ask', 'rewards_daily_rate',
          'bid_reward_per_100', 'ask_reward_per_100', 'gm_reward_per_100', 'sm_reward_per_100', 'min_size', 'max_spread',
-         'tick_size', 'market_slug', 'token1', 'token2', 'condition_id']]
+         'tick_size', 'end_date_iso', 'market_slug', 'token1', 'token2', 'condition_id']]
     new_df = new_df.replace([np.inf, -np.inf], 0)
     all_data = new_df.copy()
     s_df = new_df.copy()
@@ -588,7 +588,7 @@ def fetch_and_process_data():
                 'sm_reward_per_100', 'bid_reward_per_100', 'ask_reward_per_100', 'volatility_sum', 'volatilty/reward',
                 'min_size', '1_hour', '3_hour', '6_hour', '12_hour', '24_hour', '7_day', '30_day',
                 'best_bid', 'best_ask', 'volatility_price', 'max_spread', 'tick_size',
-                'neg_risk', 'market_slug', 'token1', 'token2', 'condition_id']
+                'neg_risk', 'end_date_iso', 'market_slug', 'token1', 'token2', 'condition_id']
         new_df = new_df[[col for col in cols if col in new_df.columns]]
 
         volatility_df = new_df.copy()
