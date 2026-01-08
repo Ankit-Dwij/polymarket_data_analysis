@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 
 import pandas as pd
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, send_file, request
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -106,6 +106,32 @@ def serve_volatility_json():
 
     try:
         df = pd.read_csv(VOLATILITY_CSV_PATH)
+        
+        # Sort by min_size in ascending order (smallest to largest)
+        if 'min_size' in df.columns:
+            df = df.sort_values('min_size', ascending=True)
+        else:
+            # If min_size column doesn't exist, just use existing order
+            pass
+        
+        # Get first 20 markets
+        df = df.head(20)
+        
+        # Apply min_size filter if provided as query parameter
+        min_size_filter = request.args.get('min_size', type=float)
+        if min_size_filter is not None:
+            if 'min_size' in df.columns:
+                df = df[df['min_size'] <= min_size_filter]
+            else:
+                return (
+                    jsonify(
+                        {
+                            "error": "min_size column not found in data",
+                        }
+                    ),
+                    400,
+                )
+        
         records = df.to_dict(orient="records")
         return jsonify(records)
     except Exception as exc:
