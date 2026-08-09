@@ -1,3 +1,5 @@
+
+
 Polymarket Liquidity Provider (LP) Data Fetcher
 
 **Overview**
@@ -31,7 +33,7 @@ GitHub account for repo access (if forking).
 Setup
 1. Clone the Repo
 bashgit clone [https://github.com/Ankit-Dwij/polymarket_data_analysis.git](https://github.com/Ankit-Dwij/polymarket_data_analysis.git)
-cd prediction_markets_test
+cd polymarket_data_analysis
 
 3. Create Virtual Environment
 bashpython -m venv .venv
